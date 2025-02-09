@@ -1,10 +1,13 @@
 package entity
 
+import "time"
+
 type Game struct {
 	ID int
 	CategoryID uint
 	QuestionIDs []uint
-	Players []Player
+	Players []uint
+	startTime time.Time
 }
 
 type Player struct {
