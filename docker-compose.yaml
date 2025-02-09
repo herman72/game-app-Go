@@ -11,10 +11,9 @@ services:
     restart: always
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
     environment:
-      MYSQL_ROOT_PASSWORD: gameapp
       MYSQL_DATABASE: gameapp_db
       MYSQL_USER: gameapp
-      MYSQL_PASSWORD: gameapp
+      
 
 volumes:  # Corrected from "valumes" to "volumes"
   dbdata:
