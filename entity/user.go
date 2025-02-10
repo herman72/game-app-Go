@@ -2,7 +2,7 @@ package entity
 
 
 type User struct {
-	ID int
+	ID uint
 	PhoneNumber string
 	Name string
 }
