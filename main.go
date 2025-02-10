@@ -1,16 +1,61 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"game-app-go/entity"
 	"game-app-go/repository/mysql"
+	"game-app-go/service/userservice"
+	"io"
+	"log"
+	"net/http"
 )
 
 func main(){
 
-	testUserMysqlRepo()
+	http.HandleFunc("/user/register", userRegisterHandler)
+	log.Print("serever is running on port 8080")
+	http.ListenAndServe(":8080", nil)
 }
 
+
+func userRegisterHandler(writer http.ResponseWriter, req *http.Request){
+	if req.Method != http.MethodPost {
+		fmt.Fprintf(writer, `{"error":"invalid method"}`)
+	}
+
+	data, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+	}
+
+	var uReq userservice.RegisterRequest
+
+	err = json.Unmarshal(data, &uReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+	mysqlRepo := mysql.New()
+	userSvc := userservice.New(mysqlRepo)
+
+	_, err = userSvc.Register(uReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	writer.Write([]byte(`{message:"user created"}`))
+}
 
 func testUserMysqlRepo() {
 	mysqlRepo := mysql.New()
