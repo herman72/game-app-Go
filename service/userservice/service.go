@@ -1,6 +1,8 @@
 package userservice
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"game-app-go/entity"
 	"game-app-go/pkg/phonenumber"
@@ -18,6 +20,7 @@ type Service struct {
 type RegisterRequest struct {
 	Name string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
+	Password string `json:"password"`
 }
 
 type RegisterResponse struct {
@@ -47,10 +50,19 @@ func (s Service) Register(req RegisterRequest)(RegisterResponse, error){
 	if len(req.Name) < 3 {
 		return RegisterResponse{}, fmt.Errorf("length should be greater then 3")
 	}
+
+	// TODO: validate password - use regex
+	if len(req.Password)<8{
+		return RegisterResponse{}, fmt.Errorf("password length should be greater then 8")
+	}
+	
+	// TODO: use bcycpt for hashing
+	
 	user := entity.User{
 		ID: 0,
 		PhoneNumber: req.PhoneNumber,
 		Name: req.Name,
+		Password: getMD5Hash(req.Password),
 	}
 	createdUser, err := s.repo.Register(user)
 
@@ -65,4 +77,22 @@ func (s Service) Register(req RegisterRequest)(RegisterResponse, error){
 
 	
 
+}
+
+type LoginRequest struct {
+	PhoneNumber string
+	Password string
+}
+
+type LoginResponse struct {
+
+}
+
+func(s Service)Login(req LoginRequest)(LoginResponse, error){
+	panic("implement me")
+}
+
+func getMD5Hash(text string)string{
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
 }
