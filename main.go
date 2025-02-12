@@ -14,6 +14,7 @@ import (
 func main(){
 
 	http.HandleFunc("/user/register", userRegisterHandler)
+	http.HandleFunc("/user/login", userLoginHandler)
 	log.Print("serever is running on port 8080")
 	http.ListenAndServe(":8080", nil)
 }
@@ -55,6 +56,45 @@ func userRegisterHandler(writer http.ResponseWriter, req *http.Request){
 	}
 
 	writer.Write([]byte(`{message:"user created"}`))
+}
+
+func userLoginHandler(writer http.ResponseWriter, req *http.Request){
+	if req.Method != http.MethodPost{
+		fmt.Fprintf(writer, `{"error":"invalid method"}`)
+	}
+	data, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+	}
+
+	var lReq userservice.LoginRequest
+
+	err = json.Unmarshal(data, &lReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	mysqlRepo := mysql.New()
+	userSvc := userservice.New(mysqlRepo)
+
+	_, err = userSvc.Login(lReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	writer.Write([]byte(`{"messge": ""user credential is ok}`))
+
 }
 
 func testUserMysqlRepo() {
