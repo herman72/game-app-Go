@@ -15,6 +15,7 @@ func main(){
 
 	http.HandleFunc("/user/register", userRegisterHandler)
 	http.HandleFunc("/user/login", userLoginHandler)
+	http.HandleFunc("/user/profile",  userProfileHandler)
 	log.Print("serever is running on port 8080")
 	http.ListenAndServe(":8080", nil)
 }
@@ -97,6 +98,55 @@ func userLoginHandler(writer http.ResponseWriter, req *http.Request){
 
 }
 
+func userProfileHandler(writer http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet{
+		fmt.Fprintf(writer, `{"error":"invalid method"}`)
+	}
+
+	pReq := userservice.ProfileRequest{UserID: 0}
+
+	data, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+	}
+
+	err = json.Unmarshal(data, &pReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	mysqlRepo := mysql.New()
+	userSvc := userservice.New(mysqlRepo)
+
+	resp, err := userSvc.Profile(pReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	data, err = json.Marshal(resp)
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	writer.Write(data)
+
+
+}
+
 func testUserMysqlRepo() {
 	mysqlRepo := mysql.New()
 	createdUser, err := mysqlRepo.Register(entity.User{
@@ -117,3 +167,4 @@ func testUserMysqlRepo() {
 
 	fmt.Println("isUnique", isUnique)
 }
+
