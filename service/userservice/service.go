@@ -88,7 +88,7 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken string `json: "access_token"`
+	AccessToken string `json:"access_token"`
 }
 
 func (s Service) Login(req LoginRequest) (LoginResponse, error) {
