@@ -11,6 +11,10 @@ import (
 	"net/http"
 )
 
+const (
+	JWTSignKey = "jwt_secret"
+)
+
 func main(){
 
 	http.HandleFunc("/user/register", userRegisterHandler)
@@ -45,7 +49,7 @@ func userRegisterHandler(writer http.ResponseWriter, req *http.Request){
 		return
 	}
 	mysqlRepo := mysql.New()
-	userSvc := userservice.New(mysqlRepo)
+	userSvc := userservice.New(mysqlRepo, JWTSignKey)
 
 	_, err = userSvc.Register(uReq)
 
@@ -83,9 +87,9 @@ func userLoginHandler(writer http.ResponseWriter, req *http.Request){
 	}
 
 	mysqlRepo := mysql.New()
-	userSvc := userservice.New(mysqlRepo)
+	userSvc := userservice.New(mysqlRepo, JWTSignKey)
 
-	_, err = userSvc.Login(lReq)
+	resp, err := userSvc.Login(lReq)
 
 	if err != nil {
 		writer.Write(
@@ -94,7 +98,18 @@ func userLoginHandler(writer http.ResponseWriter, req *http.Request){
 		return
 	}
 
-	writer.Write([]byte(`{"messge": ""user credential is ok}`))
+	data, err = json.Marshal(resp)
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	writer.Write(data)
+
+
+	// writer.Write([]byte(`{"messge": ""user credential is ok}`))
 
 }
 
@@ -102,6 +117,11 @@ func userProfileHandler(writer http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet{
 		fmt.Fprintf(writer, `{"error":"invalid method"}`)
 	}
+
+	// sessionID := req.Header.Get("SessionID")
+	// TODO: Validate sessionid by database and get user id
+
+	// validate jwt token and retrive userID from pyload
 
 	pReq := userservice.ProfileRequest{UserID: 0}
 
@@ -123,7 +143,7 @@ func userProfileHandler(writer http.ResponseWriter, req *http.Request) {
 	}
 
 	mysqlRepo := mysql.New()
-	userSvc := userservice.New(mysqlRepo)
+	userSvc := userservice.New(mysqlRepo, JWTSignKey)
 
 	resp, err := userSvc.Profile(pReq)
 
