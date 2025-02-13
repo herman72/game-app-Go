@@ -1,16 +1,171 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"game-app-go/entity"
 	"game-app-go/repository/mysql"
+	"game-app-go/service/userservice"
+	"io"
+	"log"
+	"net/http"
+)
+
+const (
+	JWTSignKey = "jwt_secret"
 )
 
 func main(){
 
-	testUserMysqlRepo()
+	http.HandleFunc("/user/register", userRegisterHandler)
+	http.HandleFunc("/user/login", userLoginHandler)
+	http.HandleFunc("/user/profile",  userProfileHandler)
+	log.Print("serever is running on port 8080")
+	http.ListenAndServe(":8080", nil)
 }
 
+
+func userRegisterHandler(writer http.ResponseWriter, req *http.Request){
+	if req.Method != http.MethodPost {
+		fmt.Fprintf(writer, `{"error":"invalid method"}`)
+	}
+
+	data, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+	}
+
+	var uReq userservice.RegisterRequest
+
+	err = json.Unmarshal(data, &uReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+	mysqlRepo := mysql.New()
+	userSvc := userservice.New(mysqlRepo, JWTSignKey)
+
+	_, err = userSvc.Register(uReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	writer.Write([]byte(`{message:"user created"}`))
+}
+
+func userLoginHandler(writer http.ResponseWriter, req *http.Request){
+	if req.Method != http.MethodPost{
+		fmt.Fprintf(writer, `{"error":"invalid method"}`)
+	}
+	data, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+	}
+
+	var lReq userservice.LoginRequest
+
+	err = json.Unmarshal(data, &lReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	mysqlRepo := mysql.New()
+	userSvc := userservice.New(mysqlRepo, JWTSignKey)
+
+	resp, err := userSvc.Login(lReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	data, err = json.Marshal(resp)
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	writer.Write(data)
+
+
+	// writer.Write([]byte(`{"messge": ""user credential is ok}`))
+
+}
+
+func userProfileHandler(writer http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet{
+		fmt.Fprintf(writer, `{"error":"invalid method"}`)
+	}
+
+	// sessionID := req.Header.Get("SessionID")
+	// TODO: Validate sessionid by database and get user id
+
+	// validate jwt token and retrive userID from pyload
+
+	pReq := userservice.ProfileRequest{UserID: 0}
+
+	data, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+	}
+
+	err = json.Unmarshal(data, &pReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	mysqlRepo := mysql.New()
+	userSvc := userservice.New(mysqlRepo, JWTSignKey)
+
+	resp, err := userSvc.Profile(pReq)
+
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	data, err = json.Marshal(resp)
+	if err != nil {
+		writer.Write(
+			[]byte(fmt.Sprintf(`{error: %s}`, err.Error())),
+		)
+		return
+	}
+
+	writer.Write(data)
+
+
+}
 
 func testUserMysqlRepo() {
 	mysqlRepo := mysql.New()
@@ -32,3 +187,4 @@ func testUserMysqlRepo() {
 
 	fmt.Println("isUnique", isUnique)
 }
+
