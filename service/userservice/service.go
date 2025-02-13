@@ -12,6 +12,7 @@ type Repository interface {
 	IsPhoneNumberUnique(phonenumber string) (bool, error)
 	Register(u entity.User) (entity.User, error)
 	GetUserByPhoneNumber(PhoneNumber string) (entity.User, bool, error)
+	GetUserByID(userID uint)(entity.User, error)
 }
 
 type Service struct {
@@ -98,6 +99,29 @@ func (s Service) Login(req LoginRequest) (LoginResponse, error) {
 		return LoginResponse{}, fmt.Errorf("username or password isn't correct")
 	}
 	return LoginResponse{}, nil
+}
+
+type ProfileRequest struct {
+
+	UserID uint
+
+}
+
+type ProfileResponse struct {
+	Name string `json:"name"`
+}
+
+// All req inputs for intractor/service should be sanitized
+
+func (s Service)Profile(req ProfileRequest)(ProfileResponse, error){
+	user, err := s.repo.GetUserByID(req.UserID)
+	// I assume data is already sanitized
+	if err != nil{
+		// TODO: we can use rich error for better error handeling
+		return ProfileResponse{}, fmt.Errorf("unexpected error %w", err)
+	}
+
+	return ProfileResponse{Name: user.Name}, nil
 }
 
 func getMD5Hash(text string) string {
