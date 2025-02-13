@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"game-app-go/entity"
 	"game-app-go/pkg/phonenumber"
+	"time"
+
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 type Repository interface {
@@ -16,6 +19,7 @@ type Repository interface {
 }
 
 type Service struct {
+	signKey string
 	repo Repository
 }
 
@@ -29,8 +33,8 @@ type RegisterResponse struct {
 	User entity.User
 }
 
-func New(repo Repository) Service {
-	return Service{repo: repo}
+func New(repo Repository, signKey string) Service {
+	return Service{repo: repo, signKey: signKey}
 }
 
 func (s Service) Register(req RegisterRequest) (RegisterResponse, error) {
@@ -84,6 +88,7 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
+	AccessToken string `json: "access_token"`
 }
 
 func (s Service) Login(req LoginRequest) (LoginResponse, error) {
@@ -98,7 +103,14 @@ func (s Service) Login(req LoginRequest) (LoginResponse, error) {
 	if user.Password != getMD5Hash(req.Password) {
 		return LoginResponse{}, fmt.Errorf("username or password isn't correct")
 	}
-	return LoginResponse{}, nil
+	// TODO: generate random session, save session id in db, return sesion id to user
+	token, err := createToken(user.ID, s.signKey)
+
+	if err != nil{
+		return LoginResponse{}, fmt.Errorf("unexpected error %w", err)
+	}
+
+	return LoginResponse{AccessToken: token}, nil
 }
 
 type ProfileRequest struct {
@@ -127,4 +139,31 @@ func (s Service)Profile(req ProfileRequest)(ProfileResponse, error){
 func getMD5Hash(text string) string {
 	hash := md5.Sum([]byte(text))
 	return hex.EncodeToString(hash[:])
+}
+
+type Claims struct {
+	RegisteredClaims jwt.RegisteredClaims
+	UserID uint
+}
+
+func (c Claims)Valid() error{
+	return nil
+}
+
+func createToken(userID uint, signKey string)(string, error){
+	// TODO: replace with rca256
+
+	claims := Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour*24*7)),
+
+		},
+		UserID: userID,
+	}
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := accessToken.SignedString([]byte(signKey)) 
+	if err != nil{
+		return "", err
+	}
+	return tokenString, nil
 }
