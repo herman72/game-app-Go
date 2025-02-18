@@ -35,3 +35,7 @@ func New(config Config)*MySQLDB {
 
 	return &MySQLDB{config: config, db: db}
 }
+
+// sql-migrate status -env="production" -config=dbconfig.yml 
+// sql-migrate upd -env="production" -config=dbconfig.yml 
+// sql-migrate down -env="production" -config=dbconfig.yml 
