@@ -20,7 +20,7 @@ const (
 )
 
 func main(){
-	fmt.Println("Start Echo server")
+	
 
 	cfg := config.Config{
 		HTTPServer: config.HTTPServer{Port: 8080},
@@ -39,8 +39,13 @@ func main(){
 			DBName: "gameapp_db",
 		},
 	}
+	// TODO: add command for up, down and status
+	// mgr :=migrator.New(cfg.Mysql)
+	// mgr.Up()
+	
 	authSvc, userSvc := setupServices(cfg)
 	server := httpserver.New(cfg, authSvc, userSvc)
+	fmt.Println("Start Echo server")
 	server.Serve()
 
 	// http.HandleFunc("/user/login", userLoginHandler)
