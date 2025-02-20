@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"game-app-go/entity"
 	"game-app-go/pkg/phonenumber"
+	"game-app-go/pkg/richerror"
 )
 
 type Repository interface {
@@ -111,9 +112,12 @@ type LoginResponse struct {
 
 func (s Service) Login(req LoginRequest) (LoginResponse, error) {
 	// TODO - it would be better to user two separate method for existence check and getUserByPhoneNumber
+	const op = "userservice.Login"
 	user, exist, err := s.repo.GetUserByPhoneNumber(req.PhoneNumber)
 	if err != nil {
-		return LoginResponse{}, fmt.Errorf("unexpected error: %w", err)
+		return LoginResponse{}, richerror.New(op).WithError(err).
+		WithMeta(map[string]interface{}{"phone_number":req.PhoneNumber})
+					
 	}
 	if !exist {
 		return LoginResponse{}, fmt.Errorf("username or password isn't correct")
@@ -159,11 +163,16 @@ type ProfileResponse struct {
 // All req inputs for intractor/service should be sanitized
 
 func (s Service)Profile(req ProfileRequest)(ProfileResponse, error){
+	const op =  "userservice.Profile"
 	user, err := s.repo.GetUserByID(req.UserID)
 	// I assume data is already sanitized
 	if err != nil{
 		// TODO: we can use rich error for better error handeling
-		return ProfileResponse{}, fmt.Errorf("unexpected error %w", err)
+		return ProfileResponse{}, richerror.New(op).
+											WithError(err).
+											WithMeta(map[string]interface{}{"req":req})
+		
+		// return ProfileResponse{}, fmt.Errorf("unexpected error %w", err)
 	}
 
 	return ProfileResponse{Name: user.Name}, nil
