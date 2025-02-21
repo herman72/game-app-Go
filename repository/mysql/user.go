@@ -11,14 +11,16 @@ import (
 
 
 func (d *MySQLDB) IsPhoneNumberUnique(phoneNumber string) (bool, error) {
-	
+	const op = "mysql.IsPhoneNumberUnique"
 	row := d.db.QueryRow(`select * from users where phone_number = ?`, phoneNumber)
 	_, err := scanUser(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return true, nil
 		}
-		return false, fmt.Errorf("can't scan query result: %w", err)
+		// fmt.Errorf("can't scan query result: %w", err)
+		return false, richerror.New(op).WithError(err).
+		WithMessage(errmsg.ErrorMsgCantScanQueryResult).WithKind(richerror.KindUnexpected)
 	}
 	return false, nil
 }
