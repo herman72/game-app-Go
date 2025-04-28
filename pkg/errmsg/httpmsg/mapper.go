@@ -15,9 +15,9 @@ func Error(err error)(message string, code int){
 		//  we should not expose unexpected erorrs
 		kind := mapkindToHTTPStatusCode(re.Kind())
 		if kind >= 500 {
-			msg = errmsg.SomethingWentWrong
+			msg = errmsg.ErrorMsgSomethingWentWrong
 		}
-		return msg, code
+		return msg, kind
 	default:
 		return err.Error(), http.StatusBadRequest
 	}
