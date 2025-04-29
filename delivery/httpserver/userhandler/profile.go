@@ -1,7 +1,6 @@
 package userhandler
 
 import (
-	"fmt"
 	"game-app-go/param"
 	"game-app-go/pkg/constant"
 	"game-app-go/pkg/errmsg/httpmsg"
