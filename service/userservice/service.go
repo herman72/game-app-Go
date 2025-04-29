@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	IsPhoneNumberUnique(phonenumber string) (bool, error)
 	Register(u entity.User) (entity.User, error)
-	GetUserByPhoneNumber(PhoneNumber string) (entity.User, bool, error)
+	GetUserByPhoneNumber(PhoneNumber string) (entity.User, error)
 	GetUserByID(userID uint)(entity.User, error)
 }
 

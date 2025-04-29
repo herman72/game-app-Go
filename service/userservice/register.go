@@ -2,7 +2,7 @@ package userservice
 
 import (
 	"fmt"
-	"game-app-go/dto"
+	"game-app-go/param"
 	"game-app-go/entity"
 )
 

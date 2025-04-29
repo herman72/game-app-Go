@@ -1,7 +1,7 @@
 package userservice
 
 import (
-	"game-app-go/dto"
+	"game-app-go/param"
 	"game-app-go/pkg/richerror"
 )
 
