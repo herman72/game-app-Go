@@ -2,11 +2,24 @@ package userhandler
 
 import (
 	"game-app-go/param"
+	"game-app-go/pkg/constant"
 	"game-app-go/pkg/errmsg/httpmsg"
+	"game-app-go/service/authservice"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
+
+func getClaims(c echo.Context) (*authservice.Claims) {
+	// let it crash
+	// claims := c.Get(constant.AuthMiddlewareContextKey)
+	// fmt.Println(claims)
+	// cl, ok := claims.(*authservice.Claims)
+	// if !ok {
+	// 	panic("invalid claims")
+	// }
+	return c.Get(constant.AuthMiddlewareContextKey).(*authservice.Claims)
+}
 
 func (h Handler) userProfile(c echo.Context) error {
 	// 	// sessionID := req.Header.Get("SessionID")
@@ -14,12 +27,14 @@ func (h Handler) userProfile(c echo.Context) error {
 
 	// validate jwt token and retrive userID from pyload
 
-	authToken := c.Request().Header.Get("Authorization")
-	claims, err := h.authSvc.ParseToken(authToken)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
+	// authToken := c.Request().Header.Get("Authorization")
+	// claims, err := h.authSvc.ParseToken(authToken)
+	// if err != nil {
+	// 	return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	// }
 
+	
+	claims := getClaims(c)
 	resp, err := h.userSvc.Profile(dto.ProfileRequest{UserID: claims.UserID})
 
 	if err != nil {
