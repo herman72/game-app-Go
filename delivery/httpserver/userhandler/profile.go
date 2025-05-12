@@ -1,8 +1,8 @@
 package userhandler
 
 import (
+	"game-app-go/config"
 	"game-app-go/param"
-	"game-app-go/pkg/constant"
 	"game-app-go/pkg/errmsg/httpmsg"
 	"game-app-go/service/authservice"
 	"net/http"
@@ -12,13 +12,13 @@ import (
 
 func getClaims(c echo.Context) (*authservice.Claims) {
 	// let it crash
-	// claims := c.Get(constant.AuthMiddlewareContextKey)
+	// claims := c.Get(config.AuthMiddlewareContextKey)
 	// fmt.Println(claims)
 	// cl, ok := claims.(*authservice.Claims)
 	// if !ok {
 	// 	panic("invalid claims")
 	// }
-	return c.Get(constant.AuthMiddlewareContextKey).(*authservice.Claims)
+	return c.Get(config.AuthMiddlewareContextKey).(*authservice.Claims)
 }
 
 func (h Handler) userProfile(c echo.Context) error {
