@@ -1,0 +1,4 @@
+
+type: yaml
+auth:
+  sign_key: jwt_secret
