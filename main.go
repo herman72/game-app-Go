@@ -21,7 +21,11 @@ const (
 )
 
 func main(){
-	
+	// 1- Load default config
+	// 2- read file and merge (override)
+	// 3- read env and merge (override)
+	cfg2 := config.Load()
+	fmt.Println(cfg2)
 
 	cfg := config.Config{
 		HTTPServer: config.HTTPServer{Port: 8080},
